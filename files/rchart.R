@@ -1,4 +1,3 @@
-require(devtools)
 require(rCharts)
 
 h1 <- Highcharts$new()
