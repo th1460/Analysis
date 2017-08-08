@@ -78,9 +78,18 @@ dygraph(dados) %>%
   dyRangeSelector(height = 20)
 ```
 
-### Chart C
+### Termos associados
 
 ```{r}
+require(d3wordcloud)
 
+dados3 <- subset(dengue$related_queries,related_queries=="top",
+                 select=c(subject,value))
+dados3$value <- iconv(dados3$value,from="utf-8",to="iso8859-1")
+
+set.seed(1235)
+d3wordcloud(words = dados3$value, freq = dados3$subject,
+            colors = brewer.pal(6, "Dark2"),
+            spiral = "archimedean")
 ```
 
