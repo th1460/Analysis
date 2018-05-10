@@ -1,0 +1,101 @@
+---
+title: "Google Trends - Termo Dengue nos últimos 12 meses"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+
+library(flexdashboard)
+library(gtrendsR)
+library(dygraphs)
+library(xts)
+
+dengue <- gtrends(c("Dengue"),geo="BR",time="today 12-m")
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Interesse por região
+
+```{r}
+library(rgdal)
+library(RColorBrewer)
+S1 <- readOGR("./BRUFE250GC_SIR", "BRUFE250GC_SIR",
+              verbose=FALSE,
+              stringsAsFactors=FALSE,
+              encoding="utf-8",
+              use_iconv=TRUE)
+
+dados2 <- dengue$interest_by_region
+dados2[,'location'] <- iconv(dados2[,'location'],from="utf-8",to="iso8859-1")
+dados2[,'location'] <- toupper(ifelse(dados2[,'location']=="Federal District",
+                                       "Distrito Federal",
+                                       substr(dados2[,'location'],10,
+                                              nchar(dados2[,'location']))))
+
+dados2 <- subset(dados2,select = c(location,hits))
+rownames(dados2) <- dados2$location
+S1$z <- dados2[S1$NM_ESTADO,'hits']
+S1$qz <- cut(S1$z,quantile(S1$z),include.lowest = TRUE)
+
+require(leaflet)
+
+qpal <- colorQuantile(
+  "RdYlBu",
+  S1$z,
+  n=4, reverse = TRUE)
+
+map <- leaflet(data = S1)
+map %>%
+  addTiles('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>') %>% 
+  addPolygons(fill = TRUE, 
+              stroke = TRUE, 
+              color = ~qpal(z),
+              smoothFactor = 0.2, 
+              fillOpacity = .5) %>% 
+  addLegend(pal = qpal,
+            values = ~z,
+            opacity = 1,
+            title="Hits Dengue") %>%
+  addMarkers(coordinates(S1)[,1],
+             coordinates(S1)[,2],
+             popup=~paste0(NM_ESTADO," (",z,")"))
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Hits durante os últimos 12 meses
+
+```{r}
+dados <- subset(dengue$interest_over_time,select=c(date,hits))
+dados <- xts(dados[,-1], order.by=dados[,1],tz="GMT")
+colnames(dados) <- "Hits"
+dygraph(dados) %>%
+  dyRangeSelector(height = 20)
+```
+
+### Termos associados
+
+```{r}
+require(d3wordcloud)
+
+dados3 <- subset(dengue$related_queries,related_queries=="top",
+                 select=c(subject,value))
+dados3$value <- iconv(dados3$value,from="utf-8",to="iso8859-1")
+
+set.seed(1235)
+d3wordcloud(words = dados3$value, freq = dados3$subject,
+            colors = brewer.pal(6, "Dark2"),
+            spiral = "archimedean")
+```
+
