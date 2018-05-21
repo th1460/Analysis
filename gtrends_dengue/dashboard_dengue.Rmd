@@ -52,10 +52,10 @@ require(leaflet)
 qpal <- colorQuantile(
   "RdYlBu",
   S1$z,
-  n=4, reverse = TRUE)
+  n = 4, reverse = TRUE)
 
 map <- leaflet(data = S1)
-map %>%
+map %>% setView(-51.33, -15.22 , zoom = 4) %>% 
   addTiles('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', attribution = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>') %>% 
   addPolygons(fill = TRUE, 
               stroke = TRUE, 
@@ -65,10 +65,7 @@ map %>%
   addLegend(pal = qpal,
             values = ~z,
             opacity = 1,
-            title="Hits Dengue") %>%
-  addMarkers(coordinates(S1)[, 1],
-             coordinates(S1)[, 2],
-             popup=~paste0(NM_ESTADO, " (", z, ")"))
+            title="Hits Dengue")
 ```
 
 Column {data-width=350}
