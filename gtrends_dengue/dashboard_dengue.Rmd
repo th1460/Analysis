@@ -1,5 +1,5 @@
 ---
-title: "Google Trends - Termo Dengue nos últimos 12 meses"
+title: "Google Trends - Termo Dengue de 2004 à 2018"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -17,11 +17,21 @@ library(flexdashboard)
 library(gtrendsR)
 library(dygraphs)
 library(xts)
+library(dplyr)
+library(magrittr)
+library(lubridate)
 
-dengue <- gtrends(c("Dengue"), geo = "BR", time = "today 12-m")  
+# dados google trend
+
+dengue <- gtrends(c("Dengue"), geo = "BR", time = "all")  
+
+# dados dengue datasus
+
+datasus <- read.csv2("dengue_datasus.csv", skip = 3) %>% as_tibble()
+
 ```
 
-Column {data-width=650}
+Column {data-width=550}
 -----------------------------------------------------------------------
 
 ### Interesse por região
@@ -68,17 +78,36 @@ map %>% setView(-51.33, -15.22 , zoom = 4) %>%
             title="Hits Dengue")
 ```
 
-Column {data-width=350}
+Column {data-width=450}
 -----------------------------------------------------------------------
 
-### Hits durante os últimos 12 meses
+### Hits de 2004 - 2018 e Taxa de incidência de 2004 - 2012
 
 ```{r}
-dados <- subset(dengue$interest_over_time,select = c(date, hits))
-dados <- xts(dados[, -1], order.by = dados[, 1], tz = "GMT") 
-colnames(dados) <- "Hits"
-dygraph(dados) %>%
-  dyRangeSelector(height = 20)
+
+dados <- subset(dengue$interest_over_time, select = c(date, hits))
+
+dados %<>% as_tibble() %>% 
+  left_join(x = ., 
+            y = datasus %>% 
+              mutate(date = Ano %>% ymd(truncated = 2)), 
+            by = "date")
+
+colnames(dados) <- c("date", "hits", "ano", "txi")
+
+dados %<>% select(-ano) 
+
+dados %<>% xts(dados[, -1], order.by = dados[, 1] %>% pull)
+
+dygraph(dados[, -1]) %>%
+  dyAxis("y", label = "Hits", valueRange = c(0, 100), 
+         independentTicks = TRUE) %>% 
+  dyAxis("y2", label = "Taxa de incidência", valueRange = c(0, 600), 
+         independentTicks = TRUE) %>% 
+  dySeries("hits",  axis = ("y"), fillGraph = TRUE) %>%
+  dySeries("txi",  axis = ("y2"), pointSize = 3) %>% 
+  dyRangeSelector(height = 15) %>% 
+  dyOptions(connectSeparatedPoints = TRUE)
 ```
 
 ### Termos associados
