@@ -7,11 +7,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-	echo = FALSE,
-	message = FALSE,
-	warning = FALSE
-)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 library(flexdashboard)
 library(gtrendsR)
@@ -23,7 +19,7 @@ library(lubridate)
 
 # dados google trend
 
-dengue <- gtrends(c("Dengue"), geo = "BR", time = "all")  
+dengue <- gtrends(c("Dengue"), geo = "BR", time = "all")
 
 # dados dengue datasus
 
