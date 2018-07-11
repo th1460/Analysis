@@ -1,0 +1,147 @@
+---
+title: "Expectativa na Web | Busca por 'dengue' no Google no Brasil desde 2004"
+resource_files:
+- BRUFE250GC_SIR/BRUFE250GC_SIR.dbf
+- BRUFE250GC_SIR/BRUFE250GC_SIR.shp
+- BRUFE250GC_SIR/BRUFE250GC_SIR.shx
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+
+require(gtrendsR) # devtools::install_github("PMassicotte/gtrendsR")
+require(magrittr)
+require(dplyr)
+require(xts)
+require(tbl2xts)
+require(dygraphs)
+require(rgdal)
+require(RColorBrewer)
+require(leaflet)
+#require(d3wordcloud) # devtools::install_github("jbkunst/d3wordcloud")
+require(wordcloud)
+require(flexdashboard)
+
+```
+
+```{r global, include=FALSE}
+
+S1 <- readOGR("./BRUFE250GC_SIR", "BRUFE250GC_SIR",
+              verbose = FALSE,
+              stringsAsFactors = FALSE,
+              encoding = "utf-8",
+              use_iconv = TRUE)
+
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+<p align="justify">
+[Google Trends](https://pt.wikipedia.org/wiki/Google_Trends) é uma ferramenta da Google que mostra os mais populares **termos** pesquisados. O Dashboard mostra como foi a busca pelo termo "dengue", no Brasil. O Período poderá ser especificado a partir de 2004. Os "hits" são indicadores que variam de 0 à 100, sendo que o local ou o momento que obteve o maior volume recebe o escore 100, e os hits sucessivos são calculados a partir deste volume máximo.
+</p>
+
+```{r}
+
+dateRangeInput("daterange", tags$b("Periodo para analise:"), 
+               start = "2004-01-01", 
+               end = Sys.Date() - 1,
+               min = "2004-01-01",
+               max = Sys.Date() - 1,
+               separator = " - ")
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Interesse no tempo
+
+```{r}
+
+# ler os dados
+
+dataInput <- reactive({
+  gtrends("dengue", geo = "BR", time = paste(input$daterange[1], input$daterange[2]))
+  })
+
+renderDygraph({
+  
+  dengue <- dataInput()
+  
+dengue$interest_over_time %>% as_tibble() %>% 
+  select(date, hits) %>% 
+  tbl_xts() %>% 
+  dygraph(ylab = "Hits") %>% 
+  dyRangeSelector()
+})
+
+```
+
+### Interesse por UF
+
+```{r}
+
+renderLeaflet({
+  
+  dengue <- dataInput()
+  
+  S1$hits <- 
+    S1 %>% data.frame() %>% as_tibble() %>% 
+    left_join(x = ., 
+              dengue$interest_by_region %>% 
+                select(NM_ESTADO = location, hits) %>% as_tibble() %>% 
+                mutate(NM_ESTADO = iconv(NM_ESTADO, from = "utf-8", to = "iso8859-1") %>% 
+                         gsub("Federal District", "Distrito Federal", x = .) %>% 
+                         gsub("State of ", "", x = .) %>% toupper()), 
+              by = "NM_ESTADO") %>% pull(hits)
+  
+  npal <- colorNumeric("RdYlBu", S1$hits, reverse = TRUE)
+  
+  leaflet(data = S1) %>% 
+    addTiles() %>% 
+    addPolygons(fill = TRUE, 
+                stroke = TRUE, 
+                color = ~npal(hits),
+                smoothFactor = .2, 
+                fillOpacity = .5) %>% 
+    addLegend(pal = npal,
+              values = ~hits,
+              opacity = 1,
+              title="Hits Dengue")
+})
+
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Termos associados
+
+```{r}
+
+set.seed(1234)
+renderPlot({
+  
+dengue <- dataInput()
+
+related <- 
+  dengue$related_queries %>% 
+  filter(related_queries == "top") %>% 
+  select(subject, value) %>% as_tibble() %>% 
+  mutate(value = iconv(value, from = "utf-8", to = "iso8859-1"))
+  
+wordcloud(words = related %>% pull(value), freq = related %>% pull(subject) %>% as.numeric,
+          colors = brewer.pal(6, "Dark2"), random.order = FALSE)
+})
+
+#d3wordcloud(words = related %>% pull(value), freq = related %>% pull(subject),
+#            colors = brewer.pal(6, "Dark2"),
+#            spiral = "rectangular")
+
+```

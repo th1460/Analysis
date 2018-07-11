@@ -1,123 +1,114 @@
 ---
-title: "Google Trends - Termo Dengue de 2004 à 2018"
-output: 
+title: "Expectativa na Web | Busca por 'dengue' no Google no Brasil desde 2004"
+output:
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
-library(flexdashboard)
-library(gtrendsR)
-library(dygraphs)
-library(xts)
-library(dplyr)
-library(magrittr)
-library(lubridate)
-
-# dados google trend
-
-dengue <- gtrends(c("Dengue"), geo = "BR", time = "all")
-
-# dados dengue datasus
-
-datasus <- read.csv2("dengue_datasus.csv", skip = 3) %>% as_tibble()
+require(gtrendsR) # devtools::install_github("PMassicotte/gtrendsR")
+require(magrittr)
+require(dplyr)
+require(xts)
+require(tbl2xts)
+require(dygraphs)
+require(rgdal)
+require(RColorBrewer)
+require(leaflet)
+#require(d3wordcloud) # devtools::install_github("jbkunst/d3wordcloud")
+require(wordcloud)
+require(flexdashboard)
 
 ```
 
-Column {data-width=550}
------------------------------------------------------------------------
+```{r global, include=FALSE}
 
-### Interesse por região
-
-```{r}
-library(rgdal)
-library(RColorBrewer)
 S1 <- readOGR("./BRUFE250GC_SIR", "BRUFE250GC_SIR",
               verbose = FALSE,
               stringsAsFactors = FALSE,
               encoding = "utf-8",
               use_iconv = TRUE)
 
-dados2 <- dengue$interest_by_region
-dados2[, 'location'] <- iconv(dados2[, 'location'], from = "utf-8", to = "iso8859-1")
-dados2[, 'location'] <- toupper(ifelse(dados2[, 'location'] == "Federal District",
-                                       "Distrito Federal",
-                                       substr(dados2[, 'location'], 10,
-                                              nchar(dados2[, 'location']))))
-
-dados2 <- subset(dados2, select = c(location,hits))
-rownames(dados2) <- dados2$location
-S1$z <- dados2[S1$NM_ESTADO, 'hits']
-S1$qz <- cut(S1$z, quantile(S1$z), include.lowest = TRUE)
-
-require(leaflet)
-
-qpal <- colorQuantile(
-  "RdYlBu",
-  S1$z,
-  n = 4, reverse = TRUE)
-
-map <- leaflet(data = S1)
-map %>% setView(-51.33, -15.22 , zoom = 4) %>% 
-  addTiles('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', attribution = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>') %>% 
-  addPolygons(fill = TRUE, 
-              stroke = TRUE, 
-              color = ~qpal(z),
-              smoothFactor = 0.2, 
-              fillOpacity = .5) %>% 
-  addLegend(pal = qpal,
-            values = ~z,
-            opacity = 1,
-            title="Hits Dengue")
 ```
 
-Column {data-width=450}
+Column {.sidebar}
 -----------------------------------------------------------------------
 
-### Hits de 2004 - 2018 e Taxa de incidência de 2004 - 2012
+<p align="justify">
+[Google Trends](https://pt.wikipedia.org/wiki/Google_Trends) é uma ferramenta da Google que mostra os mais populares **termos** pesquisados. O Dashboard mostra como foi a busca pelo termo "dengue", no Brasil. O Período poderá ser especificado a partir de 2004. Os "hits" são indicadores que variam de 0 à 100, sendo que o local ou o momento que obteve o maior volume recebe o escore 100, e os hits sucessivos são calculados a partir deste volume máximo.
+</p>
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Interesse no tempo
 
 ```{r}
 
-dados <- subset(dengue$interest_over_time, select = c(date, hits))
+# ler os dados
 
-dados %<>% as_tibble() %>% 
-  left_join(x = ., 
-            y = datasus %>% 
-              mutate(date = Ano %>% ymd(truncated = 2)), 
-            by = "date")
+dengue <- gtrends("dengue", geo = "BR", time = "all")
 
-colnames(dados) <- c("date", "hits", "ano", "txi")
+dengue$interest_over_time %>% as_tibble() %>% 
+  select(date, hits) %>% 
+  tbl_xts() %>% 
+  dygraph(ylab = "Hits") %>% 
+  dyRangeSelector()
 
-dados %<>% select(-ano) 
-
-dados %<>% xts(dados[, -1], order.by = dados[, 1] %>% pull)
-
-dygraph(dados[, -1]) %>%
-  dyAxis("y", label = "Hits", valueRange = c(0, 100), 
-         independentTicks = TRUE) %>% 
-  dyAxis("y2", label = "Taxa de incidência", valueRange = c(0, 600), 
-         independentTicks = TRUE) %>% 
-  dySeries("hits",  axis = ("y"), fillGraph = TRUE) %>%
-  dySeries("txi",  axis = ("y2"), pointSize = 3) %>% 
-  dyRangeSelector(height = 15) %>% 
-  dyOptions(connectSeparatedPoints = TRUE)
 ```
+
+### Interesse por UF
+
+```{r}
+
+S1$hits <- 
+  S1 %>% data.frame() %>% as_tibble() %>% 
+  left_join(x = ., 
+            dengue$interest_by_region %>% 
+            select(NM_ESTADO = location, hits) %>% as_tibble() %>% 
+            mutate(NM_ESTADO = iconv(NM_ESTADO, from = "utf-8", to = "iso8859-1") %>% 
+                     gsub("Federal District", "Distrito Federal", x = .) %>% 
+                     gsub("State of ", "", x = .) %>% toupper()), 
+            by = "NM_ESTADO") %>% pull(hits)
+  
+npal <- colorNumeric("RdYlBu", S1$hits, reverse = TRUE)
+  
+leaflet(data = S1) %>% 
+  addTiles() %>% 
+  addPolygons(fill = TRUE, 
+                stroke = TRUE, 
+                color = ~npal(hits),
+                smoothFactor = .2, 
+                fillOpacity = .5) %>% 
+  addLegend(pal = npal,
+              values = ~hits,
+              opacity = 1,
+              title="Hits Dengue")
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
 
 ### Termos associados
 
 ```{r}
-require(d3wordcloud)
 
-dados3 <- subset(dengue$related_queries, related_queries == "top",
-                 select = c(subject, value))
-dados3$value <- iconv(dados3$value, from = "utf-8", to = "iso8859-1")
+set.seed(1234)
 
-set.seed(1235)
-d3wordcloud(words = dados3$value, freq = dados3$subject,
-            colors = brewer.pal(6, "Dark2"),
-            spiral = "archimedean")
+related <- 
+  dengue$related_queries %>% 
+  filter(related_queries == "top") %>% 
+  select(subject, value) %>% as_tibble() %>% 
+  mutate(value = iconv(value, from = "utf-8", to = "iso8859-1"))
+  
+wordcloud(words = related %>% pull(value), freq = related %>% pull(subject) %>% as.numeric,
+          colors = brewer.pal(6, "Dark2"), random.order = FALSE)
+
+#d3wordcloud(words = related %>% pull(value), freq = related %>% pull(subject),
+#            colors = brewer.pal(6, "Dark2"),
+#            spiral = "rectangular")
+
 ```
-
