@@ -4,13 +4,13 @@ author: "Thiago Pires | FGV"
 date: "`r format(Sys.time(), '%d de %B, %Y')`"
 output: 
   revealjs::revealjs_presentation:
-    template: default.html
-    css: slides.css
+    template: ./resources/template/default.html
+    css: ./resources/css/slides.css
 ---
 
 # AWS {data-background=#9292e8}
 
-## Amazon Web Services ![](www/aws-logo.png){width=6%} 
+## Amazon Web Services ![](resources/images/aws-logo.png){width=6%} 
 
 <p, align="justify">
 A [Amazon Web Services](https://aws.amazon.com/pt/) (AWS) é uma plataforma de serviços em nuvem segura, oferecendo **poder computacional**, **armazenamento** de banco de dados, distribuição de conteúdo e outras funcionalidades.
@@ -25,21 +25,21 @@ A [Amazon Web Services](https://aws.amazon.com/pt/) (AWS) é uma plataforma de se
 
 ## Amazon EC2
 
-[![](www/ec2-page.png)](https://aws.amazon.com/pt/ec2/)
+[![](resources/images/ec2-page.png)](https://aws.amazon.com/pt/ec2/)
 
 # Configuração da máquina {data-background=#9292e8}
 
 ## Escolher uma máquina
 
-![](www/launch-step1.png)
+![](resources/images/launch-step1.png)
 
 ## Escolher o tipo de máquina
 
-![](www/launch-step2.png)
+![](resources/images/launch-step2.png)
 
 ## Detalhes na configuração
 
-![](www/launch-step3.png)
+![](resources/images/launch-step3.png)
 
 ## Detalhes avançados
 
@@ -69,22 +69,22 @@ sudo chmod 777 /srv/shiny-server
 ```
 ## Armazenamento
 
-![](www/launch-step4.png)
+![](resources/images/launch-step4.png)
 
 ## Controle de tráfego na máquina
 <h4>Portas de acesso</h4>
 
-![](www/launch-step6.png)
+![](resources/images/launch-step6.png)
 
 ## Criação de uma chave para conexão segura
 
-![](www/launch-step7.png)
+![](resources/images/launch-step7.png)
 
 ## Máquina funcionando
 
 **Em Public DNS (IPv4)** está o endereço de acesso à máquina. O usuário é o **ec2-user**.
 
-![](www/running.png)
+![](resources/images/running.png)
 
 ## Acessando a máquina através do **git-bash**
 
@@ -92,17 +92,17 @@ sudo chmod 777 /srv/shiny-server
 ssh ec2-user@ec2-34-219-66-250.us-west-2.compute.amazonaws.com -i thop.pem
 ```
 
-![](www/acesso.png)
+![](resources/images/acesso.png)
 
 ##
 
-![](www/maquina.png)
+![](resources/images/maquina.png)
 
 ## Informações e controle da máquina pelo celular
 
 <center>
-![](www/mobile.png){width=30%}&ensp;
-[![](www/logo-gplay.png){width=15%}](https://play.google.com/store/apps/details?id=com.amazon.aws.console.mobile)
+![](resources/images/mobile.png){width=30%}&ensp;
+[![](resources/images/logo-gplay.png){width=15%}](https://play.google.com/store/apps/details?id=com.amazon.aws.console.mobile)
 </center>
 
 # R, <br> RStudio Server e <br> Shiny Server {data-background=#9292e8}
@@ -171,7 +171,7 @@ Digitando no browser o **host** a **porta** e os **argumentos** de acesso à API:
 http://ec2-54-200-63-187.us-west-2.compute.amazonaws.com:8000/sum?a=145&b=189
 ```
 
-![](www/plumber.png)
+![](resources/images/plumber.png)
 
 ## {data-background=#000000}
 
