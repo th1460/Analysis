@@ -1,5 +1,5 @@
 ---
-title: "ConfiguraÁ„o e utilizaÁ„o do RStudio e Shiny Server na AWS"
+title: "Configura√ß√£o e utiliza√ß√£o do RStudio e Shiny Server na AWS"
 author: "Thiago Pires | FGV"
 date: "`r format(Sys.time(), '%d de %B, %Y')`"
 output: 
@@ -8,40 +8,56 @@ output:
     css: ./resources/css/slides.css
 ---
 
+# Computa√ß√£o em nuvem {data-background=#9292e8}
+
+## Computa√ß√£o em nuvem
+
+> *√â o fornecimento de servi√ßos de computa√ß√£o ‚Äì servidores, armazenamento, bancos de dados, rede, software, an√°lise e muito mais ‚Äì pela Internet ("a nuvem").*
+
+## Alguns dos benef√≠cios
+
+>- Redu√ß√£o de custos
+>- F√°cil manuten√ß√£o
+>- Acessibilidade e facibilidade de colabora√ß√£o
+>- Escalabilidade
+>- Seguran√ßa
+
+Fonte: *[10 motivos para aderir √† nuvem e dar adeus ao servidor](https://www.penso.com.br/top-10-motivos-para-aderir-a-nuvem/)*
+
 # AWS {data-background=#9292e8}
 
 ## Amazon Web Services ![](resources/images/aws-logo.png){width=6%} 
 
 <p, align="justify">
-A [Amazon Web Services](https://aws.amazon.com/pt/) (AWS) È uma plataforma de serviÁos em nuvem segura, oferecendo **poder computacional**, **armazenamento** de banco de dados, distribuiÁ„o de conte˙do e outras funcionalidades.
+A [Amazon Web Services](https://aws.amazon.com/pt/) (AWS) √© uma plataforma de servi√ßos em nuvem segura, oferecendo **poder computacional**, **armazenamento** de banco de dados, distribui√ß√£o de conte√∫do e outras funcionalidades.
 </p>
 
 ## Abrir uma conta
-<h4>OpÁ„o gratuÌta para 12 meses</h4>
+<h4>Op√ß√£o gratu√≠ta para 12 meses</h4>
 
-- NÌvel gratuÌto: https://aws.amazon.com/pt/free/
-- Siga as instruÁıes online para abertura de conta.
-- Parte do procedimento de cadastro envolve uma chamada telefÙnica e a digitaÁ„o de um **PIN** usando o teclado do telefone.
+- N√≠vel gratu√≠to: https://aws.amazon.com/pt/free/
+- Siga as instru√ß√µes online para abertura de conta.
+- Parte do procedimento de cadastro envolve uma chamada telef√¥nica e a digita√ß√£o de um **PIN** usando o teclado do telefone.
 
 ## Amazon EC2
 
 [![](resources/images/ec2-page.png)](https://aws.amazon.com/pt/ec2/)
 
-# ConfiguraÁ„o da m·quina {data-background=#9292e8}
+# Configura√ß√£o da m√°quina {data-background=#9292e8}
 
-## Escolher uma m·quina
+## Escolher uma m?quina
 
 ![](resources/images/launch-step1.png)
 
-## Escolher o tipo de m·quina
+## Escolher o tipo de m√°quina
 
 ![](resources/images/launch-step2.png)
 
-## Detalhes na configuraÁ„o
+## Detalhes na configura√ß√£o
 
 ![](resources/images/launch-step3.png)
 
-## Detalhes avanÁados
+## Detalhes avan√ßados
 
 ```
 #!/bin/bash
@@ -61,32 +77,59 @@ sudo yum install -y --nogpgcheck shiny-server-1.5.7.907-rh6-x86_64.rpm
 sudo rm shiny-server-1.5.7.907-rh6-x86_64.rpm
 
 #add user(s)
-useradd usu·rio
-echo usu·rio:senha | chpasswd
+useradd usu?rio
+echo usu?rio:senha | chpasswd
 
 #permission to folder
 sudo chmod 777 /srv/shiny-server
 ```
+
+## Detalhes avan√ßados (Ubuntu)
+
+```
+#install R
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install r-base-core r-base-dev libcurl4-openssl-dev libssl-dev libxml2-dev
+
+#updated R
+sudo add-apt-repository "deb http://cran.rstudio.com/bin/linux/ubuntu $(lsb_release -sc)/"
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+sudo add-apt-repository ppa:marutter/rdev
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install r-base
+
+#install Shiny and Shiny-Server (2018-07-19)
+sudo -i R -e "install.packages(c('shiny', 'rmarkdown', 'plumber', 'gtrendsR', 'dplyr', 'flexdashboard', 'xts', 'dygraphs', 'tbl2xts', 'wordcloud', 'aws.s3'), repos = 'https://cran.fiocruz.br/')"
+wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.7.907-amd64.deb
+sudo dpkg -i shiny-server-1.5.7.907-amd64.deb
+sudo rm shiny-server-1.5.7.907-amd64.deb
+
+#permission to folder
+sudo chmod 777 /srv/shiny-server
+```
+
 ## Armazenamento
 
 ![](resources/images/launch-step4.png)
 
-## Controle de tr·fego na m·quina
+## Controle de tr√°fego na m√°quina
 <h4>Portas de acesso</h4>
 
 ![](resources/images/launch-step6.png)
 
-## CriaÁ„o de uma chave para conex„o segura
+## Cria√ß√£o de uma chave para conex√£o segura
 
 ![](resources/images/launch-step7.png)
 
-## M·quina funcionando
+## M√°quina funcionando
 
-**Em Public DNS (IPv4)** est· o endereÁo de acesso ‡ m·quina. O usu·rio È o **ec2-user**.
+**Em Public DNS (IPv4)** est√° o endere√ßo de acesso √† m√°quina. O usu√°rio √© o **ec2-user**.
 
 ![](resources/images/running.png)
 
-## Acessando a m·quina atravÈs do **git-bash**
+## Acessando √† m√°quina atrav√©s do **git-bash**
 
 ```
 ssh ec2-user@ec2-34-219-66-250.us-west-2.compute.amazonaws.com -i thop.pem
@@ -98,7 +141,7 @@ ssh ec2-user@ec2-34-219-66-250.us-west-2.compute.amazonaws.com -i thop.pem
 
 ![](resources/images/maquina.png)
 
-## InformaÁıes e controle da m·quina pelo celular
+## Informa√ß√µes e controle da m√°quina pelo celular
 
 <center>
 ![](resources/images/mobile.png){width=30%}&ensp;
@@ -121,22 +164,22 @@ http://ec2-54-202-207-158.us-west-2.compute.amazonaws.com:8787
 http://ec2-54-202-207-158.us-west-2.compute.amazonaws.com:3838
 ```
 
-- Para acessar uma aplicaÁ„o especÌfica:
+- Para acessar uma aplica√ß√£o espec√≠fica:
 
 ```
 http://ec2-54-202-207-158.us-west-2.compute.amazonaws.com:3838/sample-apps/hello/
 ```
 # Plumber {data-background=#9292e8}
 
-## ConfiguraÁıes necess·rias
+## Configura√ß√µes necess√°rias
 
-- Verificar as portas em funcionamento na m·quina:
+- Verificar as portas em funcionamento na m√°quina:
 
 ```
 netstat -ant
 ```
 
-- Colocar a porta de acesso ‡ API: `:8000`
+- Colocar a porta de acesso √† API: `:8000`
 
 ## Criando uma API 
 
@@ -153,7 +196,7 @@ function(a, b){
 }
 ```
 
-Baixar arquivo **plumber.R** na m·quina
+Baixar arquivo **plumber.R** na m?quina
 
 ```
 wget https://gist.githubusercontent.com/th1460/5651ece3822f958c018150db6506b1f4/raw/e47b27570a2a04c74192d177f500d3040db05d75/plumber.R
@@ -165,13 +208,57 @@ R -e 'pr <- plumber::plumb("plumber.R"); pr$run(host = "0.0.0.0", port = 8000)'
 ```
 ## Acessando a API
 
-Digitando no browser o **host** a **porta** e os **argumentos** de acesso ‡ API:
+Digitando no browser o **host** a **porta** e os **argumentos** de acesso ? API:
 
 ```
 http://ec2-54-200-63-187.us-west-2.compute.amazonaws.com:8000/sum?a=145&b=189
 ```
 
 ![](resources/images/plumber.png)
+
+# Amazon S3 {data-background=#9292e8}
+
+## Armazenamento de objetos
+
+![](resources/images/s3-page.png)
+
+## Autoriza√ß√µes para clientes
+
+![](resources/images/iam-page.png)
+
+## Instalando cliente e configurando
+
+```
+sudo apt-get install awscli
+
+aws configure
+
+sudo aws s3 cp s3://th1460/shiny_dengue.Rmd /srv/shiny-server/sample-apps/gtrendsR/shiny_dengue.Rmd
+
+```
+
+## library(aws.s3)
+
+```{r eval=FALSE}
+
+require(aws.s3)
+
+Sys.setenv("AWS_ACCESS_KEY_ID" = "AKIAJINKOTYFNMTNTRLQ",
+           "AWS_SECRET_ACCESS_KEY" = "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")
+
+# lista de buckets
+bucketlist()
+
+# upload dados no S3
+s3saveRDS(x = dados, bucket = "th1460", object = "dados.rds")
+
+# ler dados do S3
+s3readRDS(object = "dados.rds", bucket = "th1460")
+
+# deletar dados
+delete_object(object = "dados.rds", bucket = "th1460")
+
+```
 
 ## {data-background=#000000}
 
