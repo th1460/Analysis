@@ -1,0 +1,12 @@
+name: shiny_dengue
+title: shiny_dengue
+username:
+account: th14600
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 403153
+bundleId: 1544206
+url: https://th14600.shinyapps.io/shiny_dengue/
+when: 1534769684.22042
+asMultiple: FALSE
+asStatic: FALSE

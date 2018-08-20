@@ -45,7 +45,7 @@ A [Amazon Web Services](https://aws.amazon.com/pt/) (AWS) é uma plataforma de s
 
 # Configuração da máquina {data-background=#9292e8}
 
-## Escolher uma m?quina
+## Escolher uma máquina
 
 ![](resources/images/launch-step1.png)
 
@@ -77,8 +77,8 @@ sudo yum install -y --nogpgcheck shiny-server-1.5.7.907-rh6-x86_64.rpm
 sudo rm shiny-server-1.5.7.907-rh6-x86_64.rpm
 
 #add user(s)
-useradd usu?rio
-echo usu?rio:senha | chpasswd
+useradd usuário
+echo usuário:senha | chpasswd
 
 #permission to folder
 sudo chmod 777 /srv/shiny-server
@@ -101,7 +101,7 @@ sudo apt-get upgrade
 sudo apt-get install r-base
 
 #install Shiny and Shiny-Server (2018-07-19)
-sudo -i R -e "install.packages(c('shiny', 'rmarkdown', 'plumber', 'gtrendsR', 'dplyr', 'flexdashboard', 'xts', 'dygraphs', 'tbl2xts', 'wordcloud', 'aws.s3'), repos = 'https://cran.fiocruz.br/')"
+sudo -i R -e "install.packages(c('shiny', 'rmarkdown', 'plumber', 'gtrendsR', 'dplyr', 'flexdashboard', 'xts', 'dygraphs', 'tbl2xts', 'aws.s3'), repos = 'https://cran.fiocruz.br/')"
 wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.7.907-amd64.deb
 sudo dpkg -i shiny-server-1.5.7.907-amd64.deb
 sudo rm shiny-server-1.5.7.907-amd64.deb
@@ -109,6 +109,7 @@ sudo rm shiny-server-1.5.7.907-amd64.deb
 #permission to folder
 sudo chmod 777 /srv/shiny-server
 ```
+OBS: Este script não está automático como o anterior. Os comandos deverão ser inseridos depois de ser iniciada a máquina na nuvem.
 
 ## Armazenamento
 
@@ -196,7 +197,7 @@ function(a, b){
 }
 ```
 
-Baixar arquivo **plumber.R** na m?quina
+Baixar arquivo **plumber.R** na máquina
 
 ```
 wget https://gist.githubusercontent.com/th1460/5651ece3822f958c018150db6506b1f4/raw/e47b27570a2a04c74192d177f500d3040db05d75/plumber.R
@@ -208,7 +209,7 @@ R -e 'pr <- plumber::plumb("plumber.R"); pr$run(host = "0.0.0.0", port = 8000)'
 ```
 ## Acessando a API
 
-Digitando no browser o **host** a **porta** e os **argumentos** de acesso ? API:
+Digitando no browser o **host** a **porta** e os **argumentos** de acesso à API:
 
 ```
 http://ec2-54-200-63-187.us-west-2.compute.amazonaws.com:8000/sum?a=145&b=189
@@ -223,6 +224,8 @@ http://ec2-54-200-63-187.us-west-2.compute.amazonaws.com:8000/sum?a=145&b=189
 ![](resources/images/s3-page.png)
 
 ## Autorizações para clientes
+
+Para dar acessos específicos. É necessária esta etapa para criar o id e senha de acessos para utlizar o AWS CLI.
 
 ![](resources/images/iam-page.png)
 
@@ -259,6 +262,10 @@ s3readRDS(object = "dados.rds", bucket = "th1460")
 delete_object(object = "dados.rds", bucket = "th1460")
 
 ```
+
+# Aplicação {data-background=#64A94B}
+
+## {data-background-iframe="https://th14600.shinyapps.io/shiny_dengue/"}
 
 ## {data-background=#000000}
 
